@@ -1,0 +1,33 @@
+{
+	"name": "backend",
+	"version": "3.0.0",
+	"description": "Node.js API for intelligent scraping of eBay products, offers, and sellers, with centralized API key validation, concurrency control, optimized caching, multi-domain search, and automated testing with full coverage. Includes robust endpoints for querying products, details, offers, server status, and seller status, plus intelligent fallback between subdomains and comprehensive error handling.",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"start": "node --max-old-space-size=1024 --expose-gc index.js",
+		"dev": "nodemon --inspect index.js",
+		"test": "jest"
+	},
+	"keywords": [],
+	"author": "Augusto Machado",
+	"license": "CC0 1.0 Universal",
+	"dependencies": {
+		"axios": "^1.11.0",
+		"axios-retry": "^4.5.0",
+		"cheerio": "^1.1.2",
+		"dotenv": "^17.2.2",
+		"express": "^5.1.0",
+		"express-rate-limit": "^8.1.0",
+		"node-cache": "^5.1.2",
+		"p-limit": "^7.1.1",
+		"uuid": "^12.0.0"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.28.4",
+		"@babel/preset-env": "^7.28.3",
+		"babel-jest": "^30.1.2",
+		"jest": "^30.1.3",
+		"nodemon": "^3.1.10"
+	}
+}
