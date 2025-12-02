@@ -6,6 +6,4 @@ const router = express.Router();
 router.route("/").get(StatusCtrl.getStatusApi);
 router.route("/api").get(StatusCtrl.getStatusApi);
 
-router.route("/server").get(StatusCtrl.getStatusServer);
-
 export default router;
