@@ -69,7 +69,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-#.env
+.env
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -106,11 +106,5 @@ dist
 # Plant UML files
 .puml
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# package-lock.json
+package-lock.json
