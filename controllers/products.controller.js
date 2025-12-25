@@ -306,7 +306,9 @@ function extractProductInfo($, id, link) {
 			aen: aen_code && aen_code.length > 0 ? aen_code : null,
 			shipping: shipping,
 			product_images: product_images,
-			seller_infos: seller_infos[0],
+			seller_infos: seller_infos && seller_infos.length > 0
+				? seller_infos[0]
+				: null,
 		});
 	});
 

@@ -2,11 +2,10 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { validateApiKey } from "../utils/auth.js";
 
-
 const SERVER = "https://www.ebay.com";
 const MINIMUM_OF_LETTERS = 2;
 
-export default class SellersController {
+export default class SellerController {
 	static async getSellerProducts(req, res) {
 		try {
 			validateApiKey(req.headers["x-api-key"]);
