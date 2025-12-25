@@ -6,9 +6,6 @@ import dotenv from "dotenv";
 
 import { validateApiKey } from "../utils/auth.js";
 
-// Define .env config
-dotenv.config();
-
 // Configure automatic retry for Axios:
 // - 3 attempts
 // - Retry on network errors, timeout, 5xx and 429
@@ -34,40 +31,19 @@ axiosRetry(axios, {
 });
 
 // Define .env config
-const SERVER = process.env.SERVER_BASE_URL;
-const { API_KEY } = process.env;
+const SERVER = "https://www.ebay.com";
 const MINIMUM_OF_LETTERS = 2;
 
 // Limit the number of concurrent requests to avoid overwhelming the server
 const CONCURRENCY_LIMIT = 10;
 const limit = pLimit(CONCURRENCY_LIMIT);
 
-// Define ebay subdomains
-const subdomainsMap = {
-	us: "https://www.ebay.com",
-	usa: "https://www.ebay.com",
-	philippines: "https://www.ebay.ph",
-	australia: "https://www.ebay.com.au",
-	austria: "https://www.ebay.at",
-	canada: "https://www.ebay.ca",
-	france: "https://www.ebay.fr",
-	germany: "https://www.ebay.de",
-	"hong kong": "https://www.ebay.com.hk",
-	ireland: "https://www.ebay.ie",
-	italy: "https://www.ebay.it",
-	malaysia: "https://www.ebay.com.my",
-	netherlands: "https://www.ebay.nl",
-	poland: "https://www.ebay.pl",
-	singapore: "https://www.ebay.com.sg",
-	spain: "https://www.ebay.es",
-	switzerland: "https://www.ebay.ch",
-	uk: "https://www.ebay.co.uk",
-};
-
-function extractProductListHorizontal($, product_name) {
-	const products = $(
-		"li.s-card.s-card--horizontal.s-card--dark-solt-links-blue"
-	);
+function extractProductList($, product_name) {
+	const selector =
+		orientation === "horizontal"
+		? "li.s-card.s-card--horizontal.s-card--dark-solt-links-blue"
+		: "li.s-card.s-card--vertical.s-card--dark-solt-links-blue";
+	const products = $(selector);
 	const ebay_products = [];
 
 	products.each((_, element) => {
@@ -214,7 +190,7 @@ function extractProductListHorizontal($, product_name) {
 	return ebay_products;
 }
 
-function extractProductListVertical($, product_name) {
+function extractProductListVertical($, product_name, orientation) {
 	const products = $(
 		"li.s-card.s-card--vertical.s-card--dark-solt-links-blue"
 	);
@@ -541,33 +517,11 @@ function extractProductInfo($, id, link) {
 	return product_info;
 }
 
-function normalizeCountryQuery(queryCountry) {
-	let country;
-	if (
-		typeof queryCountry === "string" &&
-		queryCountry !== null &&
-		queryCountry.trim()
-	) {
-		country = queryCountry.trim().toLowerCase().replace(/\s+/g, " ");
-	} else {
-		country = "us";
-	}
-
-	if (!subdomainsMap[country]) {
-		country = "us";
-	}
-
-	return country;
-}
 
 export default class ProductsController {
 	static async getProducts(req, res) {
 		try {
 			validateApiKey(req.headers["x-api-key"]);
-
-			const country = normalizeCountryQuery(req.query.country);
-			const domain = subdomainsMap["usa"];
-			const buy_now = false || req.query.buy_now;
 
 			let { product_name } = req.query;
 			if (typeof product_name !== "string") {
@@ -577,10 +531,12 @@ export default class ProductsController {
 				});
 			}
 
-			let link = `${domain}/sch/i.html?_nkw=${product_name}&_sacat=0&_from=R33&_ipg=240&_sop=12`;
+			const buy_now = req.query.buy_now === "true";
 
-			if (buy_now == true) {
-				link.concat("&LH_BIN=1");
+			let link = `${SERVER}/sch/i.html?_nkw=${product_name}&_sacat=0&_from=R33&_ipg=240&_sop=12`;
+
+			if (buy_now) {
+				link += "&LH_BIN=1";
 			}
 
 			if (
@@ -599,16 +555,10 @@ export default class ProductsController {
 					.then((response) => {
 						const html = response.data;
 						const $ = cheerio.load(html);
-						let ebay_products = extractProductListHorizontal(
-							$,
-							product_name
-						);
-
-						if (ebay_products.length === 0) {
-							ebay_products = extractProductListVertical(
-								$,
-								product_name
-							);
+						
+						let ebay_products = extractProductList($, product_name, "horizontal");
+						if (!ebay_products.length) {
+							ebay_products = extractProductList($, product_name, "vertical");
 						}
 
 						if (ebay_products.length === 0 || !ebay_products) {
@@ -660,37 +610,6 @@ export default class ProductsController {
 
 			const { id } = req.params;
 			const sanitizedId = id.replace(/[^a-zA-Z0-9]/g, "");
-			const country = normalizeCountryQuery(req.query.country);
-			const domain =
-				subdomainsMap["usa"] || subdomainsMap[country] || SERVER;
-
-			// Create a list of domains to try
-			// Start with the requested country
-			const triedDomains = new Set();
-			const domainsToTry = [];
-			if (subdomainsMap[country]) {
-				domainsToTry.push(subdomainsMap[country]);
-				triedDomains.add(subdomainsMap[country]);
-			}
-
-			// Add the other domains, without repeating
-			for (const key in subdomainsMap) {
-				const dom = subdomainsMap[key];
-				if (!triedDomains.has(dom)) {
-					domainsToTry.push(dom);
-					triedDomains.add(dom);
-				}
-			}
-
-			// Add SERVER if not in the list
-			if (SERVER && !triedDomains.has(SERVER)) {
-				domainsToTry.push(SERVER);
-			}
-
-			let found = false;
-			let lastError = null;
-			let foundDomain = null;
-			let foundProductInfo = null;
 
 			const controller = new AbortController();
 			req.on("close", () => {
@@ -700,85 +619,25 @@ export default class ProductsController {
 				controller.abort();
 			});
 
-			for (const domain of domainsToTry) {
-				// First, try {domain}/itm/{id}
-				let link = `${domain}/itm/${sanitizedId}`;
-				try {
-					let html = (
-						await limit(() =>
-							axios.get(link, { signal: controller.signal })
-						)
-					)?.data;
-					let $ = cheerio.load(html);
-					let product_info = extractProductInfo($, id, link);
-					if (product_info && product_info.length > 0) {
-						foundDomain = domain;
-						foundProductInfo = product_info;
-						break;
-					}
-				} catch (err) {
-					if (err.name === "AbortError") {
-						console.warn(
-							`Aborted request detected: ${req.method} ${req.originalUrl}`
-						);
-						return; // Request was aborted due to timeout or client disconnect
-					}
-					lastError = err;
-					// If not found, try {domain}/p/{id}
-					try {
-						link = `${domain}/p/${sanitizedId}`;
-						const html = (
-							await limit(() =>
-								axios.get(link, { signal: controller.signal })
-							)
-						)?.data;
-						const $ = cheerio.load(html);
-						const product_info = extractProductInfo($, id, link);
-						if (product_info && product_info.length > 0) {
-							foundDomain = domain;
-							foundProductInfo = product_info;
-							break;
-						}
-					} catch (err2) {
-						if (err2.name === "AbortError") {
-							return;
-						}
-						lastError = err2;
-						// Keep trying in the next domains
-					}
+			let link = `${SERVER}/itm/${sanitizedId}`;
+			try {
+				let html = (
+					await limit(() =>
+						axios.get(link, { signal: controller.signal })
+					)
+				)?.data;
+				let $ = cheerio.load(html);
+				let product_info = extractProductInfo($, id, link);
+
+				return res.json(product_info);
+			} catch (err) {
+				if (err.name === "AbortError") {
+					console.warn(
+						`Aborted request detected: ${req.method} ${req.originalUrl}`
+					);
+					return; // Request was aborted due to timeout or client disconnect
 				}
 			}
-
-			if (foundProductInfo) {
-				const requestedDomain =
-					subdomainsMap[country] || subdomainsMap["usa"] || SERVER;
-
-				// Check if the found domain is a US domain
-				const usDomains = [subdomainsMap["us"], subdomainsMap["usa"]];
-				const found_in_global_store = usDomains.includes(foundDomain);
-
-				let request_info = {
-					requested_domain: requestedDomain,
-					found_in_domain: foundDomain,
-					found_in_global_store: found_in_global_store,
-					found_in_requested_domain: foundDomain === requestedDomain,
-				};
-
-				if (foundDomain !== requestedDomain) {
-					request_info.message = `The product is probably no longer available on ${requestedDomain}, but is available on ${foundDomain}.`;
-				}
-
-				foundProductInfo.push(request_info);
-
-				return res.json(foundProductInfo);
-			}
-
-			// If you did not find it in any domain
-			return res.status(404).json({
-				error: "[404] Not found",
-				details: `The product ${id} was not found in any supported eBay subdomain.`,
-				lastError: lastError ? `${lastError}` : undefined,
-			});
 		} catch (err) {
 			const status =
 				err.message.includes("API_KEY") ||

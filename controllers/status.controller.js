@@ -1,14 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
 
 export default class StatusController {
-	static async getStatusApi(req, res) {
+	static getStatusApi(req, res) {
 		try {
 			let response = {
 				msg: "API status 🚀",
 				name: process.env.API_NAME,
 				environment: process.env.API_ENVIRONMENT,
 				version: process.env.API_VERSION,
-				uptime: new Date().getTime(),
+				uptime: Date.now(),
 				hash: uuidv4(),
 			};
 
