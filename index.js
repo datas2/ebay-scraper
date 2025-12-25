@@ -15,10 +15,10 @@ const PORT = process.env.PORT || 3000;
 // Parse JSON body
 app.use(express.json({ limit: "1mb" }));
 
-// Basic rate limiting (30 requests por IP por segundo)
+// Basic rate limiting (30 requests per IP per second)
 app.use(
 	rateLimit({
-		windowMs: 1000, // 1 segundo
+		windowMs: 1000, // 1 second
 		max: 30,
 		standardHeaders: true,
 		legacyHeaders: false,

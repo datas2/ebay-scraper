@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 
 export default class StatusController {
-	static getStatusApi(req, res) {
+	static async getStatusApi(req, res) {
 		try {
 			let response = {
 				msg: "API status 🚀",

@@ -1,22 +1,22 @@
-# Use uma imagem Node estável e leve
+# Use a stable and lightweight Node image
 FROM node:22-slim
 
-# Define diretório de trabalho
+# Define working directory
 WORKDIR /usr/src/app
 
-# Instala apenas dependências de produção
+# Install only production dependencies
 COPY package.json package-lock.json* ./
 RUN npm install --omit=dev
 
-# Copia o restante do código
+# Copy the rest of the code
 COPY . .
 
-# Define variável de ambiente padrão (opcional)
+# Define default environment variable (optional)
 ENV NODE_ENV=production
 
-# Cloud Run injeta PORT dinamicamente
-# Expor é opcional, mas ajuda na documentação da imagem
+# Cloud Run injects PORT dynamically
+# Exposing is optional but helps document the image
 EXPOSE 8080
 
-# Comando de inicialização
+# Startup command
 CMD ["npm", "start"]
