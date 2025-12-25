@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 
 import status from "./routes/status.routes.js";
 import products from "./routes/products.routes.js";
+import seller from "./routes/seller.routes.js";
 
 // Load environment variables
 dotenv.config({ path: ".env" });
@@ -33,6 +34,7 @@ app.use(
 app.use("/", status);
 app.use("/status", status);
 app.use("/products", products);
+app.use("/seller", seller);
 
 // Global error handler
 app.use((err, req, res, next) => {
