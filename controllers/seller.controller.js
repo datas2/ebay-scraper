@@ -1,24 +1,18 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import dotenv from "dotenv";
 import { validateApiKey } from "../utils/auth.js";
 
-// Define .env config
-dotenv.config();
-const SERVER = process.env.SERVER_BASE_URL;
+const SERVER = "https://www.ebay.com";
 const MINIMUM_OF_LETTERS = 2;
 
-export default class SellersController {
+export default class SellerController {
 	static async getSellerProducts(req, res) {
 		try {
 			validateApiKey(req.headers["x-api-key"]);
 
-			const page_number = req.query.page || 1;
 			const seller_name = req.query.seller_name.toLowerCase();
 
-			let domain = SERVER;
-
-			const link = `https://www.ebay.com/sch/i.html?_ssn=${seller_name}&store_name=${seller_name}&_oac=1&_pgn=${page_number}&rt=nc&_ipg=240`;
+			const link = `${SERVER}/sch/i.html?_ssn=${seller_name}&store_name=${seller_name}&_oac=1&rt=nc&_ipg=240`;
 			if (seller_name.length < MINIMUM_OF_LETTERS) {
 				return res.status(412).json({
 					error: "[412] Precondition failed",
@@ -91,64 +85,6 @@ export default class SellersController {
 					"span.su-styled-text.primary.bold.large-1.s-card__price"
 				);
 
-				// Discount (span com classe positive bold large ou badge)
-				const discount =
-					$(element)
-						.find(
-							"span.su-styled-text.positive.bold.large, span.s-card__badge"
-						)
-						.text()
-						.trim() || "uninformed";
-
-				// Product location (span secundário na subtitle ou badge de localização)
-				const product_location =
-					$(element)
-						.find(
-							"div.s-card__subtitle > span.su-styled-text.secondary.default"
-						)
-						.eq(1)
-						.text()
-						.trim() ||
-					$(element)
-						.find("span.s-card__badge--location")
-						.text()
-						.trim() ||
-					"uninformed";
-
-				// Logistics cost (procura por "delivery" ou "shipping" nas linhas secundárias)
-				let logistics_cost = "";
-				$(element)
-					.find(
-						"div.su-card-container__attributes__primary .s-card__attribute-row .su-styled-text.secondary.large"
-					)
-					.each((_, el) => {
-						const txt = $(el).text().trim();
-						if (
-							txt.toLowerCase().includes("delivery") ||
-							txt.toLowerCase().includes("shipping")
-						) {
-							logistics_cost = txt;
-						}
-					});
-				if (!logistics_cost) logistics_cost = "uninformed";
-
-				// Sales potential (procura por "watchers", "hot", "trending" etc)
-				let sales_potential = "";
-				$(element)
-					.find(
-						"div.su-card-container__attributes__primary .s-card__attribute-row .su-styled-text.primary.bold.large"
-					)
-					.each((_, el) => {
-						const txt = $(el).text().trim();
-						if (
-							txt.toLowerCase().includes("watcher") ||
-							txt.toLowerCase().includes("hot") ||
-							txt.toLowerCase().includes("trending")
-						) {
-							sales_potential = txt;
-						}
-					});
-				if (!sales_potential) sales_potential = "uninformed";
 
 				// Description (all subtitle-row text)
 				const description = getText("div.s-card__subtitle-row");
@@ -161,11 +97,7 @@ export default class SellersController {
 					name: name,
 					condition: condition,
 					price: price,
-					discount: discount,
-					product_location: product_location,
-					logistics_cost: logistics_cost,
 					description: description,
-					sales_potential: sales_potential,
 					link: url,
 					thumbnail: thumbnail,
 				});

@@ -3,7 +3,6 @@ import StatusCtrl from "../controllers/status.controller.js";
 
 const router = express.Router();
 
-router.route("/").get(StatusCtrl.getStatusApi);
-router.route("/api").get(StatusCtrl.getStatusApi);
+router.get(["/", "/api"], StatusCtrl.getStatusApi);
 
 export default router;
