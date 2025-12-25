@@ -11,7 +11,7 @@
 	},
 	"keywords": [],
 	"author": "Augusto Machado",
-	"license": "CC0 1.0 Universal",
+	"license": "Apache-2.0",
 	"dependencies": {
 		"axios": "^1.13.2",
 		"axios-retry": "^4.5.0",
@@ -19,9 +19,7 @@
 		"dotenv": "^17.2.3",
 		"express": "^5.2.1",
 		"express-rate-limit": "^8.2.1",
-		"node-cache": "^5.1.2",
-		"p-limit": "^7.2.0",
-		"uuid": "^13.0.0"
+		"p-limit": "^7.2.0"
 	},
 	"devDependencies": {
 		"jest": "^30.2.0",

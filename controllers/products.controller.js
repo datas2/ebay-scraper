@@ -38,7 +38,7 @@ const MINIMUM_OF_LETTERS = 2;
 const CONCURRENCY_LIMIT = 10;
 const limit = pLimit(CONCURRENCY_LIMIT);
 
-function extractProductList($, product_name) {
+function extractProductList($, product_name, orientation) {
 	const selector =
 		orientation === "horizontal"
 		? "li.s-card.s-card--horizontal.s-card--dark-solt-links-blue"
@@ -77,55 +77,6 @@ function extractProductList($, product_name) {
 		const price =
 			getText("span.su-styled-text.primary.bold.large-1.s-card__price") ||
 			"uninformed";
-
-		// Discount (ex: 72% off)
-		let discount = "uninformed";
-		$(element)
-			.find(
-				"span.su-styled-text.secondary.bold.large, span.su-styled-text.positive.bold.large"
-			)
-			.each((_, el) => {
-				const txt = $(el).text().trim();
-				if (/%\s*off/i.test(txt)) {
-					discount = txt;
-					return false; // break loop
-				}
-			});
-
-		// Product location (ex: from New Stanton, PA)
-		let product_location = "uninformed";
-		$(element)
-			.find("span.su-styled-text.secondary.large")
-			.each((_, el) => {
-				const txt = $(el).text().trim();
-				if (/^from /i.test(txt)) {
-					product_location = txt.replace(/^from /i, "");
-				}
-			});
-
-		// Logistics cost (procura por "delivery" ou "shipping" nas linhas secundárias)
-		// (ex: +R$ 21.51 shipping)
-		let logistics_cost = "uninformed";
-		$(element)
-			.find("span.su-styled-text.secondary.large")
-			.each((_, el) => {
-				const txt = $(el).text().trim();
-				if (/shipping|delivery/i.test(txt) && /^[+]/.test(txt)) {
-					logistics_cost = txt;
-				}
-			});
-
-		// Sales potential (procura por "watchers", "hot", "trending" etc)
-		// Sales potential (ex: 70 sold)
-		let sales_potential = "uninformed";
-		$(element)
-			.find("span.su-styled-text.primary.bold.large")
-			.each((_, el) => {
-				const txt = $(el).text().trim();
-				if (/sold|watcher|hot|trending/i.test(txt)) {
-					sales_potential = txt;
-				}
-			});
 
 		// Description (all subtitle-row text)
 		const description = getText("div.s-card__subtitle-row");
@@ -172,11 +123,7 @@ function extractProductList($, product_name) {
 			name: name,
 			condition: condition,
 			price: price,
-			discount: discount,
-			product_location: product_location,
-			logistics_cost: logistics_cost,
 			description: description,
-			sales_potential: sales_potential,
 			seller_name: seller_name,
 			seller_feedback: seller_feedback,
 			watchers: watchers,
@@ -509,7 +456,7 @@ function extractProductInfo($, id, link) {
 			aen: aen_code && aen_code.length > 0 ? aen_code : null,
 			shipping: shipping,
 			product_images: product_images,
-			seller_infos: seller_infos,
+			seller_infos: seller_infos[0],
 		});
 	});
 

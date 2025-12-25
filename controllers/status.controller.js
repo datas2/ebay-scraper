@@ -1,15 +1,13 @@
-import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
 
 export default class StatusController {
 	static getStatusApi(req, res) {
 		try {
 			let response = {
 				msg: "API status 🚀",
-				name: process.env.API_NAME,
-				environment: process.env.API_ENVIRONMENT,
-				version: process.env.API_VERSION,
+				name: "ebay-scraper-api",
+				version: "4.0.0",
 				uptime: Date.now(),
-				hash: uuidv4(),
 			};
 
 			res.json(response);
