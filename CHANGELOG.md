@@ -10,6 +10,40 @@
 
 ### Removed
 
+## [Released on December 25, 2025] - Version 4.0.0
+
+### Added
+
+-   Dockerfile optimized to run the API with plain Node.js (ESM) and prepared for deployment on platforms such as Cloud Run.
+-   Makefile targets to standardize local and cloud workflows:
+    -   `run-dev` for local development.
+    -   `run-test` for running the test suite.
+    -   `build-docker` and `run-docker` for building and running the Docker image locally.
+    -   `build-image`, `push-image`, and `deploy-cloudrun` for building, pushing, and deploying the image to Cloud Run.
+
+### Fixed
+
+-   Fixed the `buy_now` parameter handling in `GET /products` so the “Buy It Now” filter (`&LH_BIN=1`) is correctly applied to the eBay search URL.
+-   Adjusted tests and dependencies to work properly with modern Node.js and native ES Modules (no Babel), keeping Jest compatible with the current setup.
+
+### Changed
+
+-   Simplified `index.js`:
+    -   Removed in-memory response caching with `node-cache`.
+    -   Removed manual garbage collection logic and heap usage monitoring.
+    -   Kept only the essentials: `.env` loading, JSON body parser, rate limiting, routes, and global error/404 handlers.
+-   Standardized `package.json` scripts for Node.js:
+    -   `"start": "node index.js"` for production.
+    -   `"dev": "nodemon --inspect index.js"` for development.
+-   Updated the build and deployment flow to use the official `node:22-slim` image in the Dockerfile.
+
+### Removed
+
+-   Removed the cache middleware and all related configuration (NodeCache, TTLs, and `res.json` monkey patching).
+-   Removed manual garbage collection management (`global.gc`, memory threshold checks, and related logs).
+-   Removed Babel-related configuration and dependencies in favor of running directly on Node.js with ES Modules.
+
+
 ## [Released on September 5, 2025]
 
 ### Added
